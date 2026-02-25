@@ -31,6 +31,17 @@ const SUITS = {
 // Initialization
 function init() {
     setupEventListeners();
+
+    // Load history from localStorage
+    const savedHistory = localStorage.getItem('pokerTrackerHistory');
+    if (savedHistory) {
+        try {
+            history = JSON.parse(savedHistory);
+        } catch (e) {
+            console.error('Failed to parse history', e);
+        }
+    }
+
     renderHistory();
 }
 
@@ -176,6 +187,10 @@ function saveHand() {
     };
 
     history.unshift(handRecord); // Add to beginning of array
+
+    // Save to localStorage
+    localStorage.setItem('pokerTrackerHistory', JSON.stringify(history));
+
     renderHistory();
     resetForm();
 }
