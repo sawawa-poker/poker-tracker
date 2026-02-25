@@ -53,6 +53,45 @@
                     </div>
                 </div>
 
+                <div class="context-grid">
+                    <div class="input-group">
+                        <label for="player-count">Players</label>
+                        <select id="player-count" class="custom-select">
+                            <option value="2">2 (Heads Up)</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6" selected>6 (6-Max)</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9 (Full Ring)</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="my-position">My Position</label>
+                        <select id="my-position" class="custom-select">
+                            <option value="SB">SB</option>
+                            <option value="BB">BB</option>
+                            <option value="UTG">UTG</option>
+                            <option value="UTG+1">UTG+1</option>
+                            <option value="MP">MP</option>
+                            <option value="HJ">HJ</option>
+                            <option value="CO">CO</option>
+                            <option value="BTN" selected>BTN</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Opponent Hands</label>
+                    <div id="opponents-container">
+                        <!-- Dynamic opponent rows will go here -->
+                    </div>
+                    <button id="add-opponent-btn" class="secondary-btn" style="width: 100%; margin-top: 0.5rem;">+ Add
+                        Opponent Hand</button>
+                </div>
+
                 <div class="input-group">
                     <label for="hand-notes">Notes / Action</label>
                     <textarea id="hand-notes"

@@ -137,7 +137,57 @@ header h1 {
     color: var(--card-text-red);
 }
 
-/* Textarea & Buttons */
+/* Context Grid & Selects */
+.context-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.custom-select {
+    width: 100%;
+    background-color: var(--slot-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.75rem;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 1rem;
+    appearance: none;
+    cursor: pointer;
+}
+
+.custom-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.opponent-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.opponent-row .custom-select {
+    width: 80px;
+    padding: 0.5rem;
+}
+
+.remove-opponent-btn {
+    background: transparent;
+    border: none;
+    color: var(--card-text-red);
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-left: auto;
+}
+
 textarea {
     width: 100%;
     min-height: 80px;
