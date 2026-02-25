@@ -33,6 +33,19 @@ const SUITS = {
     'c': { symbol: '♣', colorClass: 'black' }
 };
 
+// Positions Mapping by Player Count
+const POSITIONS_MAP = {
+    2: ['SB/BTN', 'BB'],
+    3: ['SB', 'BB', 'BTN'],
+    4: ['SB', 'BB', 'CO', 'BTN'],
+    5: ['SB', 'BB', 'HJ', 'CO', 'BTN'],
+    6: ['SB', 'BB', 'UTG', 'MP', 'CO', 'BTN'],
+    7: ['SB', 'BB', 'UTG', 'UTG+1', 'MP', 'CO', 'BTN'],
+    8: ['SB', 'BB', 'UTG', 'UTG+1', 'MP', 'HJ', 'CO', 'BTN'],
+    9: ['SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO', 'BTN'],
+    10: ['SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP1', 'MP2', 'HJ', 'CO', 'BTN']
+};
+
 // Initialization
 function init() {
     setupEventListeners();
@@ -48,6 +61,22 @@ function init() {
     }
 
     renderHistory();
+    updatePositionOptions();
+}
+
+function updatePositionOptions() {
+    const players = parseInt(playerCountSelect.value);
+    const positions = POSITIONS_MAP[players] || POSITIONS_MAP[6];
+
+    // Update My Position
+    const currentMyPos = myPositionSelect.value;
+    myPositionSelect.innerHTML = positions.map(pos => `<option value="${pos}">${pos}</option>`).join('');
+    // Try to reselect previous if it exists
+    if (positions.includes(currentMyPos)) myPositionSelect.value = currentMyPos;
+    else if (positions.includes('BTN')) myPositionSelect.value = 'BTN';
+
+    // Update opponent selects
+    renderOpponents();
 }
 
 function deleteHand(id) {
@@ -57,6 +86,9 @@ function deleteHand(id) {
 }
 
 function setupEventListeners() {
+    // Player count change
+    playerCountSelect.addEventListener('change', updatePositionOptions);
+
     // Open modal on slot click
     cardSlots.forEach(slot => {
         slot.addEventListener('click', (e) => {
@@ -117,17 +149,13 @@ function removeOpponentRow(oppId) {
 }
 
 function renderOpponents() {
+    const players = parseInt(playerCountSelect.value);
+    const positions = POSITIONS_MAP[players] || POSITIONS_MAP[6];
+
     opponentsContainer.innerHTML = opponentHands.map(opp => `
         <div class="opponent-row" data-id="${opp.id}">
             <select class="custom-select opp-pos">
-                <option value="SB" ${opp.position === 'SB' ? 'selected' : ''}>SB</option>
-                <option value="BB" ${opp.position === 'BB' ? 'selected' : ''}>BB</option>
-                <option value="UTG" ${opp.position === 'UTG' ? 'selected' : ''}>UTG</option>
-                <option value="UTG+1" ${opp.position === 'UTG+1' ? 'selected' : ''}>UTG+1</option>
-                <option value="MP" ${opp.position === 'MP' ? 'selected' : ''}>MP</option>
-                <option value="HJ" ${opp.position === 'HJ' ? 'selected' : ''}>HJ</option>
-                <option value="CO" ${opp.position === 'CO' ? 'selected' : ''}>CO</option>
-                <option value="BTN" ${opp.position === 'BTN' ? 'selected' : ''}>BTN</option>
+                ${positions.map(pos => `<option value="${pos}" ${opp.position === pos ? 'selected' : ''}>${pos}</option>`).join('')}
             </select>
             <div class="card-selection-area">
                 <div class="card-slot ${opp.cards[0] ? 'filled ' + SUITS[opp.cards[0].suit].colorClass : 'empty'}" data-type="opponent" data-oppid="${opp.id}" data-index="0">
