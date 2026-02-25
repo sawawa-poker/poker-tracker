@@ -8,6 +8,14 @@ let opponentHands = []; // Array of { id, position, cards: [null, null] }
 let activeSlot = null; // { type: 'hole' | 'board' | 'opponent', index: number, opponentId?: string, element: DOMElement }
 let modalSuit = 's'; // Default suit selection
 
+let bettingActions = {
+    preflop: [], // Array of { position: string, action: string, amount?: number }
+    flop: [],
+    turn: [],
+    river: []
+};
+let activeActionContext = null; // { street: string, position: string }
+
 let history = []; // Array of saved hands
 
 // DOM Elements
@@ -24,6 +32,17 @@ const playerCountSelect = document.getElementById('player-count');
 const myPositionContainer = document.getElementById('my-position-container');
 const opponentsContainer = document.getElementById('opponents-container');
 const addOpponentBtn = document.getElementById('add-opponent-btn');
+
+// Action Modal Elements
+const actionModal = document.getElementById('action-picker-modal');
+const closeActionModalBtn = document.getElementById('close-action-modal');
+const actionModalTitle = document.getElementById('action-modal-title');
+const actionBtns = document.querySelectorAll('.action-btn');
+const actionAmountSection = document.getElementById('action-amount-section');
+const actionSlider = document.getElementById('action-slider');
+const actionSliderVal = document.getElementById('action-slider-val');
+const presetBtns = document.querySelectorAll('.preset-btn');
+const confirmActionBtn = document.getElementById('confirm-action-btn');
 
 let currentMyPos = 'BTN';
 
@@ -90,6 +109,9 @@ function updatePositionOptions() {
 
     // Update opponent selects
     renderOpponents();
+
+    // Update Action tracking UI layout based on new positions
+    renderActionStreets();
 }
 
 function deleteHand(id) {
@@ -148,6 +170,144 @@ function setupEventListeners() {
 
     // Save hand
     saveBtn.addEventListener('click', saveHand);
+
+    // Action Modal Listeners
+    closeActionModalBtn.addEventListener('click', closeActionModal);
+    actionModal.addEventListener('click', (e) => {
+        if (e.target === actionModal) closeActionModal();
+    });
+
+    actionBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            actionBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const action = btn.dataset.action;
+            if (action === 'Bet' || action === 'Call' || action === 'All-in') {
+                actionAmountSection.classList.remove('hidden');
+            } else {
+                actionAmountSection.classList.add('hidden');
+            }
+        });
+    });
+
+    actionSlider.addEventListener('input', (e) => {
+        actionSliderVal.textContent = `${e.target.value}bb`;
+        presetBtns.forEach(b => b.classList.remove('active'));
+    });
+
+    presetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            presetBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Assume 100bb starting depth for simplicity of pot-percentage mock calculation 
+            // In a real app we'd track actual pot size. Here we just map logic to slider.
+            const val = parseInt(btn.dataset.val);
+            actionSlider.value = val;
+            actionSliderVal.textContent = `${val}bb`;
+        });
+    });
+
+    confirmActionBtn.addEventListener('click', saveAction);
+}
+
+// Action Tracking Logic
+function renderActionStreets() {
+    const players = parseInt(playerCountSelect.value);
+    const positions = POSITIONS_MAP[players] || POSITIONS_MAP[6];
+    const streets = ['preflop', 'flop', 'turn', 'river'];
+
+    // Sort positions by preflop action order for preflop, and postflop order for the rest
+    // Standard 6-max Preflop: UTG, MP, CO, BTN, SB, BB
+    // Standard 6-max Postflop: SB, BB, UTG, MP, CO, BTN
+    // We already have POSITIONS_MAP in postflop order (roughly SB -> BTN).
+
+    streets.forEach(street => {
+        const container = document.getElementById(`players-${street}`);
+        const logContainer = document.getElementById(`log-${street}`);
+
+        let displayPositions = [...positions];
+        if (street === 'preflop') {
+            // Move SB and BB to the end
+            const blinds = displayPositions.splice(0, 2);
+            displayPositions.push(...blinds);
+        }
+
+        container.innerHTML = displayPositions.map(pos => {
+            // Check if this position has an action recorded in this street
+            const existingAction = bettingActions[street].find(a => a.position === pos);
+            let btnClass = 'player-action-btn';
+            let label = pos;
+
+            if (existingAction) {
+                btnClass += ` has-action action-${existingAction.action.toLowerCase()}`;
+                label = `${pos}: ${existingAction.action}`;
+                if (existingAction.amount) label += ` ${existingAction.amount}bb`;
+            }
+
+            return `<button class="${btnClass}" onclick="openActionModal('${street}', '${pos}')">${label}</button>`;
+        }).join('');
+
+        // Render logs
+        logContainer.innerHTML = bettingActions[street].map(a => {
+            let text = `<span style="font-weight:600;">${a.position}</span>: ${a.action}`;
+            if (a.amount) text += ` ${a.amount}bb`;
+            return `<div class="log-entry">${text} <button onclick="removeAction('${street}', '${a.position}')" style="background:none; border:none; color:var(--card-text-red); font-size:1rem; cursor:pointer; margin-left:4px;">&times;</button></div>`;
+        }).join('');
+    });
+}
+
+function openActionModal(street, position) {
+    activeActionContext = { street, position };
+    actionModalTitle.textContent = `Action for ${position} (${street})`;
+
+    // Reset modal state
+    actionBtns.forEach(b => b.classList.remove('active'));
+    actionAmountSection.classList.add('hidden');
+    presetBtns.forEach(b => b.classList.remove('active'));
+    actionSlider.value = 50;
+    actionSliderVal.textContent = '50bb';
+
+    actionModal.classList.remove('hidden');
+}
+
+function closeActionModal() {
+    actionModal.classList.add('hidden');
+    activeActionContext = null;
+}
+
+function saveAction() {
+    if (!activeActionContext) return;
+
+    const activeBtn = Array.from(actionBtns).find(b => b.classList.contains('active'));
+    if (!activeBtn) {
+        alert("Please select an action type.");
+        return;
+    }
+
+    const action = activeBtn.dataset.action;
+    let amount = null;
+
+    if (action === 'Bet' || action === 'Call' || action === 'All-in') {
+        amount = parseInt(actionSlider.value);
+    }
+
+    const { street, position } = activeActionContext;
+
+    // Remove existing action for this position on this street if any
+    bettingActions[street] = bettingActions[street].filter(a => a.position !== position);
+
+    // Add new action
+    bettingActions[street].push({ position, action, amount });
+
+    renderActionStreets();
+    closeActionModal();
+}
+
+function removeAction(street, position) {
+    bettingActions[street] = bettingActions[street].filter(a => a.position !== position);
+    renderActionStreets();
 }
 
 function addOpponentRow() {
@@ -362,6 +522,7 @@ function saveHand() {
         hole: structuredClone(selectedCards.hole),
         board: structuredClone(selectedCards.board),
         opponents: structuredClone(opponentHands),
+        actions: structuredClone(bettingActions),
         notes: notesInput.value.trim()
     };
 
@@ -381,6 +542,9 @@ function resetForm() {
         board: [null, null, null, null, null]
     };
     opponentHands = [];
+    bettingActions = {
+        preflop: [], flop: [], turn: [], river: []
+    };
 
     // Reset DOM elements
     document.querySelectorAll('.card-slot[data-type="hole"], .card-slot[data-type="board"]').forEach(slot => {
@@ -389,6 +553,7 @@ function resetForm() {
     });
 
     renderOpponents();
+    renderActionStreets();
     notesInput.value = '';
 }
 
@@ -434,6 +599,22 @@ function renderHistory() {
             }
         }
 
+        let actionLogHTML = '';
+        if (record.actions) {
+            const streets = ['preflop', 'flop', 'turn', 'river'];
+            const streetEmoji = { preflop: '🎭', flop: '🃏', turn: '🔥', river: '🌊' };
+
+            streets.forEach(street => {
+                if (record.actions[street] && record.actions[street].length > 0) {
+                    actionLogHTML += `<div style="margin-top: 0.5rem; font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-color);">
+                        <strong style="color:var(--primary); text-transform: capitalize;">${streetEmoji[street]} ${street}:</strong> 
+                        <span style="color: var(--text-muted);">` +
+                        record.actions[street].map(a => `<span style="color:var(--text-main); font-weight:500;">${a.position}</span> ${a.action}${a.amount ? ` ${a.amount}bb` : ''}`).join(' → ')
+                        + `</span></div>`;
+                }
+            });
+        }
+
         return `
             <div class="history-item" data-id="${record.id}">
                 <div class="history-header">
@@ -450,7 +631,8 @@ function renderHistory() {
                     ${boardHTML}
                     ${oppsHTML}
                 </div>
-                ${record.notes ? `<div class="history-notes">${record.notes}</div>` : ''}
+                ${actionLogHTML}
+                ${record.notes ? `<div class="history-notes" style="margin-top: 0.75rem;">${record.notes}</div>` : ''}
             </div>
         `;
     }).join('');

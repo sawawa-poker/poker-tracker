@@ -11,16 +11,33 @@
 
 <body>
     <div class="app-container">
-        <header>
-            <h1>Poker Hand Tracker</h1>
-        </header>
-
         <main>
             <section class="hand-input-section panel">
-                <h2>Record New Hand</h2>
+                <div class="context-grid">
+                    <div class="input-group">
+                        <label for="player-count">Players</label>
+                        <select id="player-count" class="custom-select">
+                            <option value="2">2 (Heads Up)</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6" selected>6 (6-Max)</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9 (Full Ring)</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="grid-column: 1 / -1; margin-bottom: 0;">
+                        <label>My Position</label>
+                        <div id="my-position-container" class="position-button-group">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
 
                 <div class="input-group">
-                    <label>Hole Cards (Select 2)</label>
+                    <label>Hole Cards</label>
                     <div class="card-selection-area" id="hole-cards">
                         <div class="card-slot empty" data-type="hole" data-index="0">+</div>
                         <div class="card-slot empty" data-type="hole" data-index="1">+</div>
@@ -53,25 +70,38 @@
                     </div>
                 </div>
 
-                <div class="context-grid">
-                    <div class="input-group">
-                        <label for="player-count">Players</label>
-                        <select id="player-count" class="custom-select">
-                            <option value="2">2 (Heads Up)</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6" selected>6 (6-Max)</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9 (Full Ring)</option>
-                            <option value="10">10</option>
-                        </select>
-                    </div>
-                    <div class="input-group" style="grid-column: 1 / -1;">
-                        <label>My Position</label>
-                        <div id="my-position-container" class="position-button-group">
-                            <!-- Populated dynamically by JS -->
+                <!-- Betting Actions Section -->
+                <div class="input-group">
+                    <label>Betting Actions</label>
+                    <div class="actions-container">
+                        <!-- Preflop Actions -->
+                        <div class="action-street" id="street-preflop">
+                            <div class="street-header">Preflop</div>
+                            <div class="street-players" id="players-preflop">
+                                <!-- Populated dynamically based on player count and positions -->
+                            </div>
+                            <div class="street-log" id="log-preflop"></div>
+                        </div>
+
+                        <!-- Flop Actions -->
+                        <div class="action-street" id="street-flop">
+                            <div class="street-header">Flop</div>
+                            <div class="street-players" id="players-flop"></div>
+                            <div class="street-log" id="log-flop"></div>
+                        </div>
+
+                        <!-- Turn Actions -->
+                        <div class="action-street" id="street-turn">
+                            <div class="street-header">Turn</div>
+                            <div class="street-players" id="players-turn"></div>
+                            <div class="street-log" id="log-turn"></div>
+                        </div>
+
+                        <!-- River Actions -->
+                        <div class="action-street" id="street-river">
+                            <div class="street-header">River</div>
+                            <div class="street-players" id="players-river"></div>
+                            <div class="street-log" id="log-river"></div>
                         </div>
                     </div>
                 </div>
@@ -81,8 +111,7 @@
                     <div id="opponents-container">
                         <!-- Dynamic opponent rows will go here -->
                     </div>
-                    <button id="add-opponent-btn" class="secondary-btn" style="width: 100%; margin-top: 0.5rem;">+ Add
-                        Opponent Hand</button>
+                    Opponent Hand</button>
                 </div>
 
                 <div class="input-group">
@@ -136,6 +165,41 @@
             </div>
 
             <button id="clear-slot-btn" class="secondary-btn hidden">Clear Slot</button>
+        </div>
+    </div>
+
+    <!-- Modal for Action Selection -->
+    <div id="action-picker-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="action-modal-title">Select Action</h3>
+                <button id="close-action-modal" class="close-btn">&times;</button>
+            </div>
+
+            <div class="action-type-selector">
+                <button class="action-btn" data-action="Fold">Fold</button>
+                <button class="action-btn" data-action="Check">Check</button>
+                <button class="action-btn" data-action="Call">Call</button>
+                <button class="action-btn" data-action="Bet">Bet/Raise</button>
+                <button class="action-btn" data-action="All-in">All-in</button>
+            </div>
+
+            <div id="action-amount-section" class="hidden">
+                <div style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                    Amount:</div>
+                <div class="action-amount-presets">
+                    <button class="preset-btn" data-val="33">33%</button>
+                    <button class="preset-btn" data-val="50">50%</button>
+                    <button class="preset-btn" data-val="66">66%</button>
+                    <button class="preset-btn" data-val="100">100%</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                    <input type="range" id="action-slider" min="1" max="100" value="50" style="flex: 1;">
+                    <span id="action-slider-val" style="width: 40px; text-align: right; font-weight: bold;">50bb</span>
+                </div>
+            </div>
+
+            <button id="confirm-action-btn" class="primary-btn" style="margin-top: 1.5rem;">Confirm Action</button>
         </div>
     </div>
 
