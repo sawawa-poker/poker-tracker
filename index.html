@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Hand Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Poker Hand Tracker</h1>
+        </header>
+
+        <main>
+            <section class="hand-input-section panel">
+                <h2>Record New Hand</h2>
+
+                <div class="input-group">
+                    <label>Hole Cards (Select 2)</label>
+                    <div class="card-selection-area" id="hole-cards">
+                        <div class="card-slot empty" data-type="hole" data-index="0">+</div>
+                        <div class="card-slot empty" data-type="hole" data-index="1">+</div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Board Cards</label>
+                    <div class="board-stages">
+                        <div class="board-stage">
+                            <span class="stage-label">Flop</span>
+                            <div class="card-selection-area" id="flop-cards">
+                                <div class="card-slot empty" data-type="board" data-index="0">+</div>
+                                <div class="card-slot empty" data-type="board" data-index="1">+</div>
+                                <div class="card-slot empty" data-type="board" data-index="2">+</div>
+                            </div>
+                        </div>
+                        <div class="board-stage">
+                            <span class="stage-label">Turn</span>
+                            <div class="card-selection-area" id="turn-card">
+                                <div class="card-slot empty" data-type="board" data-index="3">+</div>
+                            </div>
+                        </div>
+                        <div class="board-stage">
+                            <span class="stage-label">River</span>
+                            <div class="card-selection-area" id="river-card">
+                                <div class="card-slot empty" data-type="board" data-index="4">+</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="hand-notes">Notes / Action</label>
+                    <textarea id="hand-notes"
+                        placeholder="e.g., MP raised to 3bb, I 3-bet from BTN, Villain folded."></textarea>
+                </div>
+
+                <button id="save-btn" class="primary-btn">Save Hand</button>
+            </section>
+
+            <section class="hand-history-section panel">
+                <h2>Hand History</h2>
+                <div id="history-list" class="history-list">
+                    <!-- History items will be injected here -->
+                    <div class="empty-state">No hands recorded yet.</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for Card Selection -->
+    <div id="card-picker-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Select Card</h3>
+                <button id="close-modal" class="close-btn">&times;</button>
+            </div>
+
+            <div class="suit-selector">
+                <button class="suit-btn spades" data-suit="s">♠</button>
+                <button class="suit-btn hearts" data-suit="h">♥</button>
+                <button class="suit-btn diamonds" data-suit="d">♦</button>
+                <button class="suit-btn clubs" data-suit="c">♣</button>
+            </div>
+
+            <div class="rank-selector">
+                <button class="rank-btn" data-rank="A">A</button>
+                <button class="rank-btn" data-rank="K">K</button>
+                <button class="rank-btn" data-rank="Q">Q</button>
+                <button class="rank-btn" data-rank="J">J</button>
+                <button class="rank-btn" data-rank="T">T</button>
+                <button class="rank-btn" data-rank="9">9</button>
+                <button class="rank-btn" data-rank="8">8</button>
+                <button class="rank-btn" data-rank="7">7</button>
+                <button class="rank-btn" data-rank="6">6</button>
+                <button class="rank-btn" data-rank="5">5</button>
+                <button class="rank-btn" data-rank="4">4</button>
+                <button class="rank-btn" data-rank="3">3</button>
+                <button class="rank-btn" data-rank="2">2</button>
+            </div>
+
+            <button id="clear-slot-btn" class="secondary-btn hidden">Clear Slot</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
