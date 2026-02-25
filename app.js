@@ -21,9 +21,11 @@ const saveBtn = document.getElementById('save-btn');
 const notesInput = document.getElementById('hand-notes');
 const historyList = document.getElementById('history-list');
 const playerCountSelect = document.getElementById('player-count');
-const myPositionSelect = document.getElementById('my-position');
+const myPositionContainer = document.getElementById('my-position-container');
 const opponentsContainer = document.getElementById('opponents-container');
 const addOpponentBtn = document.getElementById('add-opponent-btn');
+
+let currentMyPos = 'BTN';
 
 // Suits Mapping
 const SUITS = {
@@ -69,11 +71,22 @@ function updatePositionOptions() {
     const positions = POSITIONS_MAP[players] || POSITIONS_MAP[6];
 
     // Update My Position
-    const currentMyPos = myPositionSelect.value;
-    myPositionSelect.innerHTML = positions.map(pos => `<option value="${pos}">${pos}</option>`).join('');
-    // Try to reselect previous if it exists
-    if (positions.includes(currentMyPos)) myPositionSelect.value = currentMyPos;
-    else if (positions.includes('BTN')) myPositionSelect.value = 'BTN';
+    if (!positions.includes(currentMyPos)) {
+        currentMyPos = positions.includes('BTN') ? 'BTN' : positions[0];
+    }
+
+    myPositionContainer.innerHTML = positions.map(pos =>
+        `<button class="pos-btn ${currentMyPos === pos ? 'active' : ''}" data-pos="${pos}">${pos}</button>`
+    ).join('');
+
+    // Reattach listeners for my positions
+    myPositionContainer.querySelectorAll('.pos-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            currentMyPos = btn.dataset.pos;
+            myPositionContainer.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
 
     // Update opponent selects
     renderOpponents();
@@ -139,8 +152,16 @@ function setupEventListeners() {
 
 function addOpponentRow() {
     const oppId = 'opp_' + Date.now();
-    opponentHands.push({ id: oppId, position: 'BB', cards: [null, null] });
+    const players = parseInt(playerCountSelect.value);
+    const positions = POSITIONS_MAP[players] || POSITIONS_MAP[6];
+    const defaultPos = positions.includes('BB') ? 'BB' : positions[0];
+
+    opponentHands.push({ id: oppId, position: defaultPos, cards: [null, null] });
     renderOpponents();
+
+    // Auto open modal for the newly created opponent's first card
+    const newSlot = document.querySelector(`.card-slot[data-type="opponent"][data-oppid="${oppId}"][data-index="0"]`);
+    if (newSlot) openModal('opponent', 0, newSlot, oppId);
 }
 
 function removeOpponentRow(oppId) {
@@ -154,9 +175,13 @@ function renderOpponents() {
 
     opponentsContainer.innerHTML = opponentHands.map(opp => `
         <div class="opponent-row" data-id="${opp.id}">
-            <select class="custom-select opp-pos">
-                ${positions.map(pos => `<option value="${pos}" ${opp.position === pos ? 'selected' : ''}>${pos}</option>`).join('')}
-            </select>
+            <div class="opponent-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span class="stage-label" style="font-weight: 600; color: var(--text-main);">Opponent Position</span>
+                <button class="remove-opponent-btn" onclick="removeOpponentRow('${opp.id}')">&times;</button>
+            </div>
+            <div class="position-button-group opp-pos-group" style="margin-bottom: 0.75rem;">
+                ${positions.map(pos => `<button class="pos-btn ${opp.position === pos ? 'active' : ''}" data-pos="${pos}">${pos}</button>`).join('')}
+            </div>
             <div class="card-selection-area">
                 <div class="card-slot ${opp.cards[0] ? 'filled ' + SUITS[opp.cards[0].suit].colorClass : 'empty'}" data-type="opponent" data-oppid="${opp.id}" data-index="0">
                     ${opp.cards[0] ? `<span class="rank">${opp.cards[0].rank}</span><span class="suit">${SUITS[opp.cards[0].suit].symbol}</span>` : '+'}
@@ -165,7 +190,6 @@ function renderOpponents() {
                     ${opp.cards[1] ? `<span class="rank">${opp.cards[1].rank}</span><span class="suit">${SUITS[opp.cards[1].suit].symbol}</span>` : '+'}
                 </div>
             </div>
-            <button class="remove-opponent-btn" onclick="removeOpponentRow('${opp.id}')">&times;</button>
         </div>
     `).join('');
 
@@ -174,8 +198,12 @@ function renderOpponents() {
         const id = row.dataset.id;
         const oppObj = opponentHands.find(o => o.id === id);
 
-        row.querySelector('.opp-pos').addEventListener('change', (e) => {
-            oppObj.position = e.target.value;
+        row.querySelectorAll('.opp-pos-group .pos-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                oppObj.position = btn.dataset.pos;
+                row.querySelectorAll('.opp-pos-group .pos-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
         });
 
         row.querySelectorAll('.card-slot').forEach(slot => {
@@ -330,7 +358,7 @@ function saveHand() {
         id: Date.now(),
         date: new Date().toLocaleString(),
         players: parseInt(playerCountSelect.value),
-        position: myPositionSelect.value,
+        position: currentMyPos,
         hole: structuredClone(selectedCards.hole),
         board: structuredClone(selectedCards.board),
         opponents: structuredClone(opponentHands),

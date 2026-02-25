@@ -165,18 +165,44 @@ header h1 {
 
 .opponent-row {
     display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
+    flex-direction: column;
+    align-items: stretch;
     background: rgba(0, 0, 0, 0.2);
-    padding: 0.5rem;
+    padding: 0.75rem;
     border-radius: 6px;
     border: 1px solid var(--border-color);
+    margin-bottom: 1rem;
 }
 
-.opponent-row .custom-select {
-    width: 80px;
-    padding: 0.5rem;
+.position-button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.pos-btn {
+    background-color: var(--slot-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 0.5rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1 1 auto;
+    text-align: center;
+}
+
+.pos-btn.active {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.pos-btn:hover:not(.active) {
+    border-color: var(--text-muted);
+    color: var(--text-main);
 }
 
 .remove-opponent-btn {
@@ -185,7 +211,6 @@ header h1 {
     color: var(--card-text-red);
     font-size: 1.5rem;
     cursor: pointer;
-    margin-left: auto;
 }
 
 textarea {
