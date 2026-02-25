@@ -378,6 +378,22 @@ function renderOpponents() {
 function openModal(type, index, element, opponentId = null) {
     activeSlot = { type, index, opponentId, element };
 
+    // Update modal title
+    const modalTitleEl = document.getElementById('card-modal-title');
+    if (modalTitleEl) {
+        let title = 'Select Card';
+        if (type === 'hole') {
+            title = `Hole Card ${index + 1}`;
+        } else if (type === 'board') {
+            if (index < 3) title = `Flop Card ${index + 1}`;
+            else if (index === 3) title = 'Turn Card';
+            else if (index === 4) title = 'River Card';
+        } else if (type === 'opponent') {
+            title = `Opponent Hole ${index + 1}`;
+        }
+        modalTitleEl.textContent = title;
+    }
+
     // Set active suit button state
     suitBtns.forEach(b => b.classList.remove('active'));
     document.querySelector(`.suit-btn[data-suit="${modalSuit}"]`).classList.add('active');
